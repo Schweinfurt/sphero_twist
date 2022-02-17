@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Launch file -->
+
+<launch>
+    <!-- Defining the node and executable and publishing the output on terminal-->
+    <node pkg="sphero_twist" name="twist_bolt_control" type="twist_bolt_control.py" output="screen">
+        <!-- loading the parameters from yaml file during th runtime -->
+        <rosparam command="load" file="$(find sphero_twist)/config/experiments.yaml"/>
+    </node>
+</launch>
