@@ -1,9 +1,18 @@
 ROS Packages for the spherical robots
 
-## Quick Start
-Open a new terminal and execute the following command
+# Quick Start
 
-  $ rosrun sphero_twist twist_bolt_control.py
-  
-## Contribute
+Open a new terminal and execute the following command:
+
+$ git clone https://github.com/Schweinfurt/experiments.git
+
+$ chmod +x twist_bolt_control.py
+
+$ rosrun experiments twist_bolt_control.py
+
+
+# Contribute
+
 We welcome any contributions to this repo!
+
+
