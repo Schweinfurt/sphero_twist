@@ -4,7 +4,7 @@ ROS Packages for the spherical robots
 
 Open a new terminal and execute the following command:
 
-$ git clone https://github.com/Schweinfurt/experiments.git
+$ git clone https://github.com/Schweinfurt/sphero_twist.git
 
 $ chmod +x twist_bolt_control.py
 
