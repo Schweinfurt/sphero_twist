@@ -8,7 +8,7 @@ $ git clone https://github.com/Schweinfurt/sphero_twist.git
 
 $ chmod +x twist_bolt_control.py
 
-$ rosrun experiments twist_bolt_control.py
+$ rosrun sphero_twist twist_bolt_control.py
 
 
 # Contribute
