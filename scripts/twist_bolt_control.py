@@ -8,7 +8,7 @@ import asyncio
 from geometry_msgs.msg import Twist
 from geometry_msgs.msg import Point
 from std_msgs.msg import ColorRGBA
-from std_msgs.msg import Int8
+from std_msgs.msg import UInt8
 
 
 from spherov2 import scanner
@@ -44,21 +44,27 @@ class BoltControl(object):
 		## initializing the attributes and declaring a node'
 		super(BoltControl, self).__init__()
 
-		## declaring the node 'twist_bolt_control'
+		## declaring the ROS node 'twist_bolt_control'
 		rospy.init_node('twist_bolt_control', anonymous=True)    
 		
 		self.position_pub = rospy.Publisher('/bolt/bolt_position', Point, queue_size=10)
+		rospy.Subscriber('/bolt/cmd_duration', UInt8, self.duration_callback)	
+		rospy.Subscriber('/bolt/cmd_color', ColorRGBA, self.color_callback)					
+		
 		
 
 		# Initialise the messages of the robot
 		
 		self.speed = 0
 		self.angular = 0
+		
 		self.duration = 3
+		rospy.loginfo("start value: duration = %d  ", self.duration)		
 		
 		self.color_r = 255
 		self.color_g = 128
-		self.color_b = 128	
+		self.color_b = 128		
+		rospy.loginfo("start value: color = (%s)", str(self.color_r) + "," + str(self.color_g) + "," + str(self.color_b))		
 		
 
 		self.position_msg = Point()
@@ -66,9 +72,10 @@ class BoltControl(object):
 		self.position_msg.y = 0
 		self.position_msg.z = 0
 		
-		self.twist_msg = Twist()		
-					
+		self.twist_msg = Twist()	
 		self.spheroBolt_start(my_toy)	
+		
+
 
 
 	## this function is executed. sphero-bolt rolls forward or backward.
@@ -131,28 +138,29 @@ class BoltControl(object):
 					
 		number = 0
 		cycle_counts = 20
-
+		
+		
 		## iterating && checking alphabet entered via keyboard to run the corresponding actions
+
 		while(1):
 			number = number + 1 			
 			rospy.loginfo("cycle: %d", number)
-
 			if (number == cycle_counts):
 				self.stop_movement(my_toy)										
 				break
 			else:
-				self.spheroBolt_execute_action(my_toy)		
-
+				self.spheroBolt_execute_action(my_toy)
+			
 		rospy.spin()
+					
+
 
 
 	## bolt is running ...		
 	def spheroBolt_execute_action(self, my_toy):
 
-		color_list = [Color(r=255, g=0, b=0), Color(r=0, g=255, b=0), Color(r=255, g=97, b=3), Color(r=51, g=161, b=201), Color(r=173, g=255, b=47), Color(r=255, g=0, b=128), Color(r=0, g=128, b=255)]
-		number = len(color_list)
-		i = random.randint(0,number-1)
-		my_toy.set_main_led(color_list[i])		
+		my_toy.set_main_led(Color(r=self.color_r, g=self.color_g, b=self.color_b))
+			
 		
 		my_toy.set_speed(0) 			
 		my_toy.roll( self.angular, self.speed, self.duration)
@@ -171,7 +179,7 @@ class BoltControl(object):
 
 
 
-	## When new messages are received, callback is invoked with the message '_key_msg'.
+	## When new Twist-messages are received, callback is invoked with the message '_key_msg'.
 	def sphero_callback(self, _key_msg):  		
 		
 		self.twist_msg = _key_msg
@@ -182,21 +190,40 @@ class BoltControl(object):
 		
 		#rospy.loginfo(rospy.get_caller_id() + ' -> started robot: ' + self.__robot_name)
 
+
+	## When new INT-messages are received, callback is invoked with the message '_duration_msg'.
+	def duration_callback(self, _duration_msg):  		
+		
+		self.duration = _duration_msg.data
+
+		rospy.loginfo("execute the action: duration = %d  ", self.duration)
+		
+		
+	## When new Color-messages are received, callback is invoked with the message '_color_msg'.
+	def color_callback(self, _color_msg):  		
+	
+		self.color_r = int(_color_msg.r)
+		self.color_g = int(_color_msg.g)
+		self.color_b = int(_color_msg.b)					
+		#self.color_a = _color_msg.a			
+
+		rospy.loginfo("execute the action: color = (%s)", str(self.color_r) + "," + str(self.color_g) + "," + str(self.color_b))
+
+
 if __name__== "__main__":
 
 	## discovering and connecting a bolt
 	toy = scanner.find_toy()
-	asyncio.run(main(toy.address, toy.name))
-	
-
-	with SpheroEduAPI(toy) as _toy:		
-		try:
-			## a new BoltControl-Class's instance is created.	
-			new_toy = BoltControl(_toy)
-			while not rospy.is_shutdown():
-				new_toy.bolt_subscriber_publish(_toy)
-		except rospy.ROSInterruptException:
-			pass
+	if toy is not None:
+		asyncio.run(main(toy.address, toy.name))	
+		with SpheroEduAPI(toy) as _toy:		
+			try:
+				## a new BoltControl-Class's instance is created.	
+				new_toy = BoltControl(_toy)
+				while not rospy.is_shutdown():
+					new_toy.bolt_subscriber_publish(_toy)
+			except rospy.ROSInterruptException:
+				pass
 			
 			
   
