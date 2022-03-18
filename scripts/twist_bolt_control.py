@@ -44,8 +44,8 @@ class BoltControl(object):
 		## initializing the attributes and declaring a node'
 		super(BoltControl, self).__init__()
 
-		## declaring the ROS node 'twist_bolt_control'
-		rospy.init_node('twist_bolt_control', anonymous=True)    
+		## declaring the node 'twist_bolt_control'
+		rospy.init_node('twist_bolt_control', anonymous=True, disable_signals=True)    
 		
 		self.position_pub = rospy.Publisher('/bolt/bolt_position', Point, queue_size=10)
 		rospy.Subscriber('/bolt/cmd_duration', UInt8, self.duration_callback)	
@@ -85,11 +85,11 @@ class BoltControl(object):
 		
 		rospy.loginfo("sphero bolt is spinning!")
 		my_toy.spin(360, 8) 
-		#time.sleep(1)
+
 		
 		rospy.loginfo("sphero bolt rolls forward and backward!")				
 		self.move_forward_backward(my_toy)
-		#time.sleep(1)
+
 	
 	def getSpheroBoltPosiotion(self, _my_toy):
 	
@@ -112,18 +112,15 @@ class BoltControl(object):
 				
 		my_toy.set_main_led(Color(r=255, g=0, b=128))   
 		my_toy.roll(0,50,self.duration)
-		#time.sleep(1)
 
 		self.position_pub.publish(self.getSpheroBoltPosiotion(my_toy))
 
 		my_toy.set_main_led(Color(r=0, g=128, b=255))   
 		my_toy.set_speed(0)
 		my_toy.roll(0,-50,self.duration)
-		#time.sleep(1)
 
 		self.position_pub.publish(self.getSpheroBoltPosiotion(my_toy))
 
-		#my_toy.strobe(Color(255, 0, 0), (3 / 15) * .5, 15)
 		my_toy.set_speed(0)
 						
 		
@@ -137,22 +134,26 @@ class BoltControl(object):
 		rospy.Subscriber('/bolt/cmd_vel', Twist, self.sphero_callback)			
 					
 		number = 0
-		cycle_counts = 20
+		cycle_counts = 200
 		
 		
 		## iterating && checking alphabet entered via keyboard to run the corresponding actions
 
-		while(1):
-			number = number + 1 			
-			rospy.loginfo("cycle: %d", number)
-			if (number == cycle_counts):
-				self.stop_movement(my_toy)										
-				break
-			else:
-				self.spheroBolt_execute_action(my_toy)
+		try:
+			while(1):
+				number = number + 1 			
+				rospy.loginfo("cycle: %d", number)
+				if (number == cycle_counts):
+					self.stop_movement(my_toy)										
+					break
+				else:
+					self.spheroBolt_execute_action(my_toy)
 			
-		rospy.spin()
-					
+			rospy.spin()
+		except KeyboardInterrupt:
+			self.stop_movement(my_toy)
+			rospy.loginfo("The program has been interrupted!")
+			sys.exit(0)					
 
 
 
