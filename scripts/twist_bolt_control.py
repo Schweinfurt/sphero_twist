@@ -19,15 +19,15 @@ def getToysList():
 	toyNames = []
 	toys = scanner.find_toys()	
 	if not toys:	
-		print(f' ')	
-		print(f'Sorry, toys are not found!')
-		print(f' ')
+		print(' ')	
+		print('Sorry, toys are not found!')
+		print(' ')
 		sys.exit()
 		
 	else:	
-		print(f' ')
-		print(f'Following Sphero-BOLTs are discovered: ')
-		print(f' ')
+		print(' ')
+		print('Following Sphero-BOLTs are discovered: ')
+		print(' ')
 
 		for t in toys:
 			toyNames.append(t.name)
