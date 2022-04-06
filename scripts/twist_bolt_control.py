@@ -20,7 +20,7 @@ def getToysList():
 	toys = scanner.find_toys()	
 	if not toys:	
 		print(' ')	
-		print('Sorry, toys are not found!')
+		print('The Sphero-BOLTs were not found!')
 		print(' ')
 		sys.exit()
 		
@@ -52,7 +52,7 @@ def connectToy(toys_list, toy_names):
 			
 	_toy = toys_list[_index]	
 	print(' ') 
-	print(f'Connected to desired sphero-BOLT: ' + toys_list[_index].name)
+	print(f'Connect to your desired sphero-BOLT: ' + toys_list[_index].name)
 	print(' ')
 
 	return _toy
