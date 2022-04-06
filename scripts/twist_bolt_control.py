@@ -1,9 +1,6 @@
 #!/usr/bin/env python3
 
 import sys, copy, rospy
-import random
-import time
-import asyncio
 
 from geometry_msgs.msg import Twist
 from geometry_msgs.msg import Point
@@ -14,25 +11,51 @@ from std_msgs.msg import UInt8
 from spherov2 import scanner
 from spherov2.sphero_edu import SpheroEduAPI
 from spherov2.types import Color
-from bleak import BleakScanner
-from bleak import BleakClient
+
 
 ## scanning for BLE devices to discover all UUID characteristics
-async def main(_address, _name):
+def getToysList():
 
-	devices = await BleakScanner.discover()
-	print(f' ')
-	print(f'Following devices are discovered: ')
-	print(f' ')
-
-	for d in devices:
-		print(d.name)
-
-	async with BleakClient(_address) as client:
-		print(f' ') 
-		print(f'Connected to sphero-bolt ' + _name , {client.is_connected})
+	toyNames = []
+	toys = scanner.find_toys()	
+	if not toys:	
+		print(f' ')	
+		print(f'Sorry, toys are not found!')
 		print(f' ')
-		await asyncio.sleep(1)
+		sys.exit()
+		
+	else:	
+		print(f' ')
+		print(f'Following Sphero-BOLTs are discovered: ')
+		print(f' ')
+
+		for t in toys:
+			toyNames.append(t.name)
+			print(t.name)		
+			
+	return toys, toyNames
+	
+	
+def connectToy(toys_list, toy_names):
+
+	_index = 0
+	
+	print(' ')
+	toy_name = input("Which Sphero-BOLT do you want to use? Please enter its name: ")
+	print(' ')
+	
+	if toy_name in toy_names:
+		_index = toy_names.index(toy_name)				
+					
+					
+	print('The index of the desired sphero-BOLT is: ', _index)
+			
+	_toy = toys_list[_index]	
+	print(' ') 
+	print(f'Connected to desired sphero-BOLT: ' + toys_list[_index].name)
+	print(' ')
+
+	return _toy
 
 
 class BoltControl(object):
@@ -50,8 +73,7 @@ class BoltControl(object):
 		self.position_pub = rospy.Publisher('/bolt/bolt_position', Point, queue_size=10)
 		rospy.Subscriber('/bolt/cmd_duration', UInt8, self.duration_callback)	
 		rospy.Subscriber('/bolt/cmd_color', ColorRGBA, self.color_callback)					
-		
-		
+				
 
 		# Initialise the messages of the robot
 		
@@ -93,12 +115,12 @@ class BoltControl(object):
 	
 	def getSpheroBoltPosiotion(self, _my_toy):
 	
-		rospy.loginfo("get_location()['x']: %d", _my_toy.get_location()['x'])
-		rospy.loginfo("get_location()['y']: %d", _my_toy.get_location()['y'])
+		rospy.loginfo(_my_toy.get_location())
 		
 		self.position_msg.x = _my_toy.get_location()['x']
 		self.position_msg.y = _my_toy.get_location()['y']
 		self.position_msg.z = 0
+		
 		
 		return self.position_msg		
 	
@@ -110,12 +132,12 @@ class BoltControl(object):
 		rospy.loginfo("duration: %d", self.duration)
 		self.position_pub.publish(self.getSpheroBoltPosiotion(my_toy))
 				
-		my_toy.set_main_led(Color(r=255, g=0, b=128))   
+		my_toy.set_main_led(Color(r=0, g=255, b=0))   
 		my_toy.roll(0,50,self.duration)
 
 		self.position_pub.publish(self.getSpheroBoltPosiotion(my_toy))
 
-		my_toy.set_main_led(Color(r=0, g=128, b=255))   
+		my_toy.set_main_led(Color(r=0, g=0, b=255))   
 		my_toy.set_speed(0)
 		my_toy.roll(0,-50,self.duration)
 
@@ -134,7 +156,7 @@ class BoltControl(object):
 		rospy.Subscriber('/bolt/cmd_vel', Twist, self.sphero_callback)			
 					
 		number = 0
-		cycle_counts = 200
+		cycle_counts = 1000
 		
 		
 		## iterating && checking alphabet entered via keyboard to run the corresponding actions
@@ -142,7 +164,7 @@ class BoltControl(object):
 		try:
 			while(1):
 				number = number + 1 			
-				rospy.loginfo("cycle: %d", number)
+				#rospy.loginfo("cycle: %d", number)
 				if (number == cycle_counts):
 					self.stop_movement(my_toy)										
 					break
@@ -152,7 +174,7 @@ class BoltControl(object):
 			rospy.spin()
 		except KeyboardInterrupt:
 			self.stop_movement(my_toy)
-			rospy.loginfo("The program has been interrupted!")
+			rospy.loginfo("The program was interrupted!")
 			sys.exit(0)					
 
 
@@ -166,8 +188,7 @@ class BoltControl(object):
 		my_toy.set_speed(0) 			
 		my_toy.roll( self.angular, self.speed, self.duration)
 		
-		self.position_pub.publish(self.getSpheroBoltPosiotion(my_toy))				
-		#time.sleep(1)		
+		self.position_pub.publish(self.getSpheroBoltPosiotion(my_toy))
 
 	
 	## setting the speed of the sphero-bolt from -255 to 255, where 0 is stopped.
@@ -175,9 +196,6 @@ class BoltControl(object):
 
 		my_toy.set_speed(0)
 		my_toy.strobe(Color(255, 0, 0), (3 / 15) * .5, 15)
-		my_toy.strobe(Color(192, 255, 62), (3 / 15) * .5, 15)
-		my_toy.strobe(Color(0, 255, 127), (3 / 15) * .5, 15)
-
 
 
 	## When new Twist-messages are received, callback is invoked with the message '_key_msg'.
@@ -189,8 +207,7 @@ class BoltControl(object):
 		rospy.loginfo("execute the action: speed = %d  -- angular-speed: %d", self.speed, self.angular)
 		self.angular = self.angular + int(round(self.twist_msg.angular.z))
 		
-		#rospy.loginfo(rospy.get_caller_id() + ' -> started robot: ' + self.__robot_name)
-
+		
 
 	## When new INT-messages are received, callback is invoked with the message '_duration_msg'.
 	def duration_callback(self, _duration_msg):  		
@@ -214,17 +231,19 @@ class BoltControl(object):
 if __name__== "__main__":
 
 	## discovering and connecting a bolt
-	toy = scanner.find_toy()
+	toys, toyNames = getToysList()
+	toy = connectToy(toys, toyNames)
+	
 	if toy is not None:
-		asyncio.run(main(toy.address, toy.name))	
-		with SpheroEduAPI(toy) as _toy:		
+		with SpheroEduAPI(toy) as toy_:		
 			try:
 				## a new BoltControl-Class's instance is created.	
-				new_toy = BoltControl(_toy)
+				new_toy = BoltControl(toy_)
 				while not rospy.is_shutdown():
-					new_toy.bolt_subscriber_publish(_toy)
+					new_toy.bolt_subscriber_publish(toy_)
 			except rospy.ROSInterruptException:
 				pass
+	
 			
 			
   
