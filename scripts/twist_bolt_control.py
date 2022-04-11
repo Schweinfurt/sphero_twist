@@ -13,6 +13,17 @@ from spherov2.sphero_edu import SpheroEduAPI
 from spherov2.types import Color
 
 
+msg = """
+
+---------------------------------------------
+Your input value is beyond the defined range!
+It will not be changed. 
+---------------------------------------------
+
+
+"""
+
+
 ## scanning for BLE devices to discover all UUID characteristics
 def getToysList():
 
@@ -174,7 +185,7 @@ class BoltControl(object):
 			rospy.spin()
 		except KeyboardInterrupt:
 			self.stop_movement(my_toy)
-			rospy.loginfo("The program was interrupted!")
+			rospy.loginfo("The program terminated with keyboard interrupt.")
 			sys.exit(0)					
 
 
@@ -211,22 +222,29 @@ class BoltControl(object):
 
 	## When new INT-messages are received, callback is invoked with the message '_duration_msg'.
 	def duration_callback(self, _duration_msg):  		
-		
-		self.duration = _duration_msg.data
 
-		rospy.loginfo("execute the action: duration = %d  ", self.duration)
+		if (1 <_duration_msg.data < 9):	
+			self.duration = _duration_msg.data
+			rospy.loginfo("execute the action: duration = %d  ", self.duration)
+		else:
+			print(msg)
+			
 		
 		
 	## When new Color-messages are received, callback is invoked with the message '_color_msg'.
 	def color_callback(self, _color_msg):  		
 	
-		self.color_r = int(_color_msg.r)
-		self.color_g = int(_color_msg.g)
-		self.color_b = int(_color_msg.b)					
-		#self.color_a = _color_msg.a			
+		if ((0<=int(_color_msg.r)<=255) and (0<=int(_color_msg.g)<=255) and (0<=int(_color_msg.b)<=255)):
+			self.color_r = int(_color_msg.r)
+			self.color_g = int(_color_msg.g)
+			self.color_b = int(_color_msg.b)					
+			#self.color_a = _color_msg.a			
 
-		rospy.loginfo("execute the action: color = (%s)", str(self.color_r) + "," + str(self.color_g) + "," + str(self.color_b))
-
+			rospy.loginfo("execute the action: color = (%s)", str(self.color_r) + "," + str(self.color_g) + "," + str(self.color_b))
+			
+		else:
+			print(msg)
+			
 
 if __name__== "__main__":
 
@@ -236,13 +254,13 @@ if __name__== "__main__":
 	
 	if toy is not None:
 		with SpheroEduAPI(toy) as toy_:		
-			try:
-				## a new BoltControl-Class's instance is created.	
-				new_toy = BoltControl(toy_)
-				while not rospy.is_shutdown():
-					new_toy.bolt_subscriber_publish(toy_)
-			except rospy.ROSInterruptException:
-				pass
+			#try:
+			## a new BoltControl-Class's instance is created.	
+			new_toy = BoltControl(toy_)
+			while not rospy.is_shutdown():
+				new_toy.bolt_subscriber_publish(toy_)
+			#except rospy.ROSInterruptException:
+				#pass
 	
 			
 			
