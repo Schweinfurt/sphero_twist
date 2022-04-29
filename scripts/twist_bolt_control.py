@@ -216,7 +216,7 @@ class BoltControl(object):
 		self.speed = int(round(self.twist_msg.linear.x))
 
 		rospy.loginfo("execute the action: speed = %d  -- angular-speed: %d", self.speed, self.angular)
-		self.angular = self.angular + int(round(self.twist_msg.angular.z))
+		self.angular = (self.angular + int(round(self.twist_msg.angular.z)))%360
 		
 		
 
