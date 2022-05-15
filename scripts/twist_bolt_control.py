@@ -2,11 +2,8 @@
 
 import sys, copy, rospy
 
-from geometry_msgs.msg import Twist
-from geometry_msgs.msg import Point
-from std_msgs.msg import ColorRGBA
-from std_msgs.msg import UInt8
-
+from geometry_msgs.msg import Twist, Point, Pose
+from std_msgs.msg import ColorRGBA, Float32
 
 from spherov2 import scanner
 from spherov2.sphero_edu import SpheroEduAPI
@@ -79,10 +76,12 @@ class BoltControl(object):
 		super(BoltControl, self).__init__()
 
 		## declaring the node 'twist_bolt_control'
-		rospy.init_node('twist_bolt_control', anonymous=True, disable_signals=True)    
+		rospy.init_node('twist_bolt_control', anonymous=True, disable_signals=True)   
 		
 		self.position_pub = rospy.Publisher('/bolt/bolt_position', Point, queue_size=10)
-		rospy.Subscriber('/bolt/cmd_duration', UInt8, self.duration_callback)	
+		self.pose_pub = rospy.Publisher('/bolt/bolt_pose', Pose, queue_size=10)		
+		
+		rospy.Subscriber('/bolt/cmd_duration', Float32, self.duration_callback)	
 		rospy.Subscriber('/bolt/cmd_color', ColorRGBA, self.color_callback)					
 				
 
@@ -91,7 +90,7 @@ class BoltControl(object):
 		self.speed = 0
 		self.angular = 0
 		
-		self.duration = 3
+		self.duration = 0.5
 		rospy.loginfo("start value: duration = %d  ", self.duration)		
 		
 		self.color_r = 255
@@ -105,10 +104,18 @@ class BoltControl(object):
 		self.position_msg.y = 0
 		self.position_msg.z = 0
 		
-		self.twist_msg = Twist()	
+		self.pose_msg = Pose()
+		self.pose_msg.position.x = 0
+		self.pose_msg.position.y = 0
+		self.pose_msg.position.z = 0	
+		self.pose_msg.orientation.x = 0
+		self.pose_msg.orientation.y = 0
+		self.pose_msg.orientation.z = 0
+		self.pose_msg.orientation.w = 0			
+				
+		self.twist_msg = Twist()		
 		self.spheroBolt_start(my_toy)	
 		
-
 
 
 	## this function is executed. sphero-bolt rolls forward or backward.
@@ -116,66 +123,49 @@ class BoltControl(object):
 
 		my_toy.set_main_led(Color(r=self.color_r, g=self.color_g, b=self.color_b))   
 		
-		rospy.loginfo("sphero bolt is spinning!")
-		my_toy.spin(360, 8) 
-
-		
-		rospy.loginfo("sphero bolt rolls forward and backward!")				
-		self.move_forward_backward(my_toy)
 
 	
 	def getSpheroBoltPosiotion(self, _my_toy):
 	
-		rospy.loginfo(_my_toy.get_location())
 		
-		self.position_msg.x = _my_toy.get_location()['x']
-		self.position_msg.y = _my_toy.get_location()['y']
+		self.position_msg.x = round(_my_toy.get_location()['x'],4)
+		self.position_msg.y = round(_my_toy.get_location()['y'],4)
 		self.position_msg.z = 0
 		
 		
-		return self.position_msg		
-	
-	
-	## setting the speed of the sphero-bolt from -255 to 255, where positive speed is forward, 
-	## negative is backward and 0 is stopped.
-	def move_forward_backward(self, my_toy):
-			
-		rospy.loginfo("duration: %d", self.duration)
-		self.position_pub.publish(self.getSpheroBoltPosiotion(my_toy))
-				
-		my_toy.set_main_led(Color(r=0, g=255, b=0))   
-		my_toy.roll(0,50,self.duration)
-
-		self.position_pub.publish(self.getSpheroBoltPosiotion(my_toy))
-
-		my_toy.set_main_led(Color(r=0, g=0, b=255))   
-		my_toy.set_speed(0)
-		my_toy.roll(0,-50,self.duration)
-
-		self.position_pub.publish(self.getSpheroBoltPosiotion(my_toy))
-
-		my_toy.set_speed(0)
-						
+		return self.position_msg	
 		
 
-	##create a node called cmd_vel_listener that subscribes to the '/bolt/cmd_vel' topic.	
-	def bolt_subscriber_publish(self, my_toy):	
+	def getSpheroBoltPose(self, _my_toy):
+	
 
-		## subscribing to the topic '/bolt/cmd_vel' , '/bolt/cmd_duration', '/bolt/cmd_color'
-		## When new messages are received, callback 'sphero_callback' is invoked with the message '_key_msg'.
+		self.pose_msg.position.x = round(_my_toy.get_location()['x'],4)
+		self.pose_msg.position.y = round(_my_toy.get_location()['y'],4)
+		self.pose_msg.position.z = 0	
+		self.pose_msg.orientation.x = round(_my_toy.get_orientation()['pitch'],4)
+		self.pose_msg.orientation.y = round(_my_toy.get_orientation()['roll'],4)
+		self.pose_msg.orientation.z = round(_my_toy.get_orientation()['yaw'],4)
+		self.pose_msg.orientation.w = 0
+		
+		rospy.loginfo('current position: {},{} -- current orientation: {} '.format(self.pose_msg.position.x, self.pose_msg.position.y, self.pose_msg.orientation.z))
+		
+		return self.pose_msg			
+		
+	
+			
+	## subscribing on the topic '/bolt/cmd_vel'
+	## When new messages are received, callback 'sphero_callback' is invoked with the message '_key_msg'.	
+	def bolt_subscriber_publish(self, my_toy):	
 		
 		rospy.Subscriber('/bolt/cmd_vel', Twist, self.sphero_callback)			
 					
 		number = 0
-		cycle_counts = 1000
+		cycle_counts = 1300
 		
-		
-		## iterating && checking alphabet entered via keyboard to run the corresponding actions
-
 		try:
 			while(1):
 				number = number + 1 			
-				#rospy.loginfo("cycle: %d", number)
+
 				if (number == cycle_counts):
 					self.stop_movement(my_toy)										
 					break
@@ -183,6 +173,7 @@ class BoltControl(object):
 					self.spheroBolt_execute_action(my_toy)
 			
 			rospy.spin()
+			
 		except KeyboardInterrupt:
 			self.stop_movement(my_toy)
 			rospy.loginfo("The program terminated with keyboard interrupt.")
@@ -200,6 +191,7 @@ class BoltControl(object):
 		my_toy.roll( self.angular, self.speed, self.duration)
 		
 		self.position_pub.publish(self.getSpheroBoltPosiotion(my_toy))
+		self.pose_pub.publish(self.getSpheroBoltPose(my_toy))	
 
 	
 	## setting the speed of the sphero-bolt from -255 to 255, where 0 is stopped.
@@ -214,18 +206,18 @@ class BoltControl(object):
 		
 		self.twist_msg = _key_msg
 		self.speed = int(round(self.twist_msg.linear.x))
-
-		rospy.loginfo("execute the action: speed = %d  -- angular-speed: %d", self.speed, self.angular)
-		self.angular = (self.angular + int(round(self.twist_msg.angular.z)))%360
 		
+		rospy.loginfo("execute the action: speed = %d  -- angular-speed: %d", self.speed, int(round(self.twist_msg.angular.z))%360)
+		
+		self.angular = self.angular + int(round(self.twist_msg.angular.z))
 		
 
-	## When new INT-messages are received, callback is invoked with the message '_duration_msg'.
+	## When new duration-messages are received, callback is invoked with the message '_duration_msg'.
 	def duration_callback(self, _duration_msg):  		
 
-		if (1 <_duration_msg.data < 9):	
+		if (0.1 <_duration_msg.data < 9):	
 			self.duration = _duration_msg.data
-			rospy.loginfo("execute the action: duration = %d  ", self.duration)
+			rospy.loginfo("execute the action: duration = %f  ", self.duration)
 		else:
 			print(msg)
 			
@@ -253,15 +245,9 @@ if __name__== "__main__":
 	toy = connectToy(toys, toyNames)
 	
 	if toy is not None:
-		with SpheroEduAPI(toy) as toy_:		
-			#try:
+		with SpheroEduAPI(toy) as toy_:			
 			## a new BoltControl-Class's instance is created.	
 			new_toy = BoltControl(toy_)
 			while not rospy.is_shutdown():
-				new_toy.bolt_subscriber_publish(toy_)
-			#except rospy.ROSInterruptException:
-				#pass
-	
-			
-			
+				new_toy.bolt_subscriber_publish(toy_)			
   

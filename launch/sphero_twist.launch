@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Launch file -->
+
+<!-- this file is only an example! You need to modify it if you use it!   -->
 
 <launch>
     <!-- Defining the node and executable and publishing the output on terminal-->
