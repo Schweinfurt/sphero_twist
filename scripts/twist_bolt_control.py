@@ -118,7 +118,6 @@ class BoltControl(object):
 		
 
 
-	## this function is executed. sphero-bolt rolls forward or backward.
 	def spheroBolt_start(self, my_toy):
 
 		my_toy.set_main_led(Color(r=self.color_r, g=self.color_g, b=self.color_b))   
