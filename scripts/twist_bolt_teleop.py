@@ -55,8 +55,7 @@ def getKey():
 
 def position_callback(_position_msg):
 
-	rospy.loginfo("received position: (%d,%d)", int(_position_msg.x),int(_position_msg.y))
-	#rospy.loginfo("received position: \tx %d \ty %d" %(int(_position_msg.x),int(_position_msg.y)))
+	#rospy.loginfo("received position: (%d,%d)", int(_position_msg.x),int(_position_msg.y))
 		
 	
 def getDurationAndColor(_inputValue):
@@ -152,7 +151,7 @@ if __name__=="__main__":
 							
 				rate.sleep()
 				rospy.loginfo("sent speed: %d  -- angular-speed: %d", twist.linear.x, twist.angular.z)
-				rospy.loginfo("sent values: (%s)", str(_durationValue)+","+str(_durationValue)+","+str(_color_r)+","+str(_color_g)+","+str(_color_b))	
+				#rospy.loginfo("sent values: (%s)", str(_durationValue)+","+str(_durationValue)+","+str(_color_r)+","+str(_color_g)+","+str(_color_b))	
 	except:
 		print(e)
 
