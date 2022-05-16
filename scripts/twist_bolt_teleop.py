@@ -53,7 +53,7 @@ def getKey():
 	return key
 
 
-def position_callback(_position_msg):
+#def position_callback(_position_msg):
 
 	#rospy.loginfo("received position: (%d,%d)", int(_position_msg.x),int(_position_msg.y))
 		
@@ -61,7 +61,7 @@ def position_callback(_position_msg):
 def getDurationAndColor(_inputValue):
 
 	#print(f"Arguments of the script : {_inputValue[0:]}")	
-	durationValue_ = int(_inputValue[0])
+	durationValue_ = float(_inputValue[0])
 	color_r_ = float(_inputValue[1])
 	color_g_ = float(_inputValue[2])
 	color_b_ = float(_inputValue[3])					
@@ -93,7 +93,7 @@ if __name__=="__main__":
 	pub_duration = rospy.Publisher('/bolt/cmd_duration', Float32, queue_size=10)	
 	pub_color = rospy.Publisher('/bolt/cmd_color', ColorRGBA, queue_size=10)
 		
-	rospy.Subscriber('/bolt/bolt_position', Point, position_callback)	
+	#rospy.Subscriber('/bolt/bolt_position', Point, position_callback)	
 	
 	
 	_vel = 0
