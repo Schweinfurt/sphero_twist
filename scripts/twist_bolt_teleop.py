@@ -7,7 +7,7 @@ import rospy
 from geometry_msgs.msg import Twist
 from geometry_msgs.msg import Point
 from std_msgs.msg import ColorRGBA
-from std_msgs.msg import UInt8
+from std_msgs.msg import Float32
 
 
 
@@ -87,20 +87,11 @@ if __name__=="__main__":
 		print(f"Argument {i:>5}: {arg}")	
 	
 	_durationValue, _color_r, _color_g, _color_b, _color_a = getDurationAndColor(sys.argv[1:])	
-	#rospy.loginfo("received input: (%s)", str(_durationValue) + "," + str(_color_r) + "," + str(_color_g) + "," + str(_color_b))
-	
-	#if (_durationValue < 2 or _durationValue > 8 or _color_r < 0 or _color_r > 255 or _color_g < 0 or _color_g > 255 or _color_b < 0 or _color_b > 255):
-	#	print('Input value is out of range! Try again.')
-	#	print(' ')		
-	#	print('--')
-	#	print(msg_in)
-	#	sys.exit()
-	
 	
 
 	# declaring the topic '/bolt/cmd_vel'. Create a publisher which can "talk" to bolt-robot and tell it to move
 	pub_action = rospy.Publisher('/bolt/cmd_vel', Twist, queue_size=10)
-	pub_duration = rospy.Publisher('/bolt/cmd_duration', UInt8, queue_size=10)	
+	pub_duration = rospy.Publisher('/bolt/cmd_duration', Float32, queue_size=10)	
 	pub_color = rospy.Publisher('/bolt/cmd_color', ColorRGBA, queue_size=10)
 		
 	rospy.Subscriber('/bolt/bolt_position', Point, position_callback)	
@@ -146,7 +137,7 @@ if __name__=="__main__":
 				twist.linear.x = _vel; twist.linear.y = 0.0; twist.linear.z = 0.0
 				twist.angular.x = 0.0; twist.angular.y = 0.0; twist.angular.z = _angular_vel
 				
-				boltDuration = UInt8()
+				boltDuration = Float32()
 				boltDuration.data = _durationValue
 
 				boltColor = ColorRGBA()
