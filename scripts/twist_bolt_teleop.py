@@ -51,11 +51,6 @@ def getKey():
 
 	termios.tcsetattr(sys.stdin, termios.TCSADRAIN, settings)
 	return key
-
-
-#def position_callback(_position_msg):
-
-	#rospy.loginfo("received position: (%d,%d)", int(_position_msg.x),int(_position_msg.y))
 		
 	
 def getDurationAndColor(_inputValue):
@@ -92,8 +87,6 @@ if __name__=="__main__":
 	pub_action = rospy.Publisher('/bolt/cmd_vel', Twist, queue_size=10)
 	pub_duration = rospy.Publisher('/bolt/cmd_duration', Float32, queue_size=10)	
 	pub_color = rospy.Publisher('/bolt/cmd_color', ColorRGBA, queue_size=10)
-		
-	#rospy.Subscriber('/bolt/bolt_position', Point, position_callback)	
 	
 	
 	_vel = 0

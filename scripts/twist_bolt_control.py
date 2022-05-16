@@ -2,9 +2,8 @@
 
 import sys, copy, rospy
 
-from geometry_msgs.msg import Twist, Point, Pose
+from geometry_msgs.msg import Twist, Pose
 from std_msgs.msg import ColorRGBA, Float32
-
 from spherov2 import scanner
 from spherov2.sphero_edu import SpheroEduAPI
 from spherov2.types import Color
@@ -78,9 +77,7 @@ class BoltControl(object):
 		## declaring the node 'twist_bolt_control'
 		rospy.init_node('twist_bolt_control', anonymous=True, disable_signals=True)   
 		
-		self.position_pub = rospy.Publisher('/bolt/bolt_position', Point, queue_size=10)
-		self.pose_pub = rospy.Publisher('/bolt/bolt_pose', Pose, queue_size=10)		
-		
+		self.pose_pub = rospy.Publisher('/bolt/bolt_pose', Pose, queue_size=10)				
 		rospy.Subscriber('/bolt/cmd_duration', Float32, self.duration_callback)	
 		rospy.Subscriber('/bolt/cmd_color', ColorRGBA, self.color_callback)					
 				
@@ -97,12 +94,6 @@ class BoltControl(object):
 		self.color_g = 128
 		self.color_b = 128		
 		rospy.loginfo("start value: color = (%s)", str(self.color_r) + "," + str(self.color_g) + "," + str(self.color_b))		
-		
-
-		self.position_msg = Point()
-		self.position_msg.x = 0
-		self.position_msg.y = 0
-		self.position_msg.z = 0
 		
 		self.pose_msg = Pose()
 		self.pose_msg.position.x = 0
@@ -122,17 +113,6 @@ class BoltControl(object):
 
 		my_toy.set_main_led(Color(r=self.color_r, g=self.color_g, b=self.color_b))   
 		
-
-	
-	def getSpheroBoltPosiotion(self, _my_toy):
-	
-		
-		self.position_msg.x = round(_my_toy.get_location()['x'],4)
-		self.position_msg.y = round(_my_toy.get_location()['y'],4)
-		self.position_msg.z = 0
-		
-		
-		return self.position_msg	
 		
 
 	def getSpheroBoltPose(self, _my_toy):
@@ -189,7 +169,6 @@ class BoltControl(object):
 		my_toy.set_speed(0) 			
 		my_toy.roll( self.angular, self.speed, self.duration)
 		
-		self.position_pub.publish(self.getSpheroBoltPosiotion(my_toy))
 		self.pose_pub.publish(self.getSpheroBoltPose(my_toy))	
 
 	
