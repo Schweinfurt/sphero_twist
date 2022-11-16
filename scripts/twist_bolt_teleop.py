@@ -72,7 +72,7 @@ if __name__=="__main__":
 	# declaring the node 'twist_bolt_teleop'
 	rospy.init_node('twist_bolt_teleop')
 	
-	# check input parameters	
+	# checking input parameters	
 	if len(sys.argv) != 5:
 		print(msg_in)
 		sys.exit()
@@ -83,9 +83,13 @@ if __name__=="__main__":
 	_durationValue, _color_r, _color_g, _color_b, _color_a = getDurationAndColor(sys.argv[1:])	
 	
 
-	# declaring the topic '/bolt/cmd_vel'. Create a publisher which can "talk" to bolt-robot and tell it to move
+	# publishing a command on the topic /bolt/cmd_vel which can "talk" to the robot and tell it to move
 	pub_action = rospy.Publisher('/bolt/cmd_vel', Twist, queue_size=10)
+	
+	# publishing a message on the topic /bolt/cmd_duration, and telling the robot how lang to move
 	pub_duration = rospy.Publisher('/bolt/cmd_duration', Float32, queue_size=10)	
+	
+	# publishing a message on the topic /bolt/cmd_color to change the LED-color of the robot	
 	pub_color = rospy.Publisher('/bolt/cmd_color', ColorRGBA, queue_size=10)
 	
 	
@@ -125,6 +129,7 @@ if __name__=="__main__":
 						break
 
 	
+				# controlling the sphero-bolt with this Twist message  
 				twist = Twist()
 				twist.linear.x = _vel; twist.linear.y = 0.0; twist.linear.z = 0.0
 				twist.angular.x = 0.0; twist.angular.y = 0.0; twist.angular.z = _angular_vel
