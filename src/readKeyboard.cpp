@@ -1,7 +1,8 @@
 /*
   this is just an example of how to read a character
   from the keyboard. 
-  You need to create the program "twist_bolt_teleop.cpp" yourself. 
+  
+  You need to write your own program "twist_bolt_teleop.cpp". 
 */
 
 #include <ros/ros.h>
@@ -36,6 +37,8 @@ static void keyboardLoop()
     ufd.fd = spa;
     ufd.events = POLLIN;
     
+    // geometry_msgs::Twist _cmdvel;
+    
     while (ros::ok())
     {
         // wait for next event on a file descriptor from the keyboard
@@ -68,6 +71,8 @@ static void keyboardLoop()
         {
             case 'w':
 		puts("w");
+		// speed = 20;
+		// angle = 0;
 		break;
 	    case 's':
 		puts("s");
@@ -81,6 +86,11 @@ static void keyboardLoop()
             default:
                 puts("Default");
         }
+        
+        // _cmdvel.linear.x = speed;
+        // _cmdvel.angular.z = angle;
+        // pub_cmd.publish(_cmdvel);
+        
     }
 }
 
